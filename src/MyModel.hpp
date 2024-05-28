@@ -14,6 +14,7 @@
 #include "Shader.hpp"
 #include "Texture.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

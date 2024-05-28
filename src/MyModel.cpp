@@ -23,7 +23,7 @@ MyApplication::MyApplication()
   projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
 
   // model
-  mesh = new Model(RES_DIR "/models/rose.obj");
+  mesh = new Model(RES_DIR "/models/alliance.obj");
   shaderProgram.use();
 
   shaderProgram.setUniform("world", world_matrix);
