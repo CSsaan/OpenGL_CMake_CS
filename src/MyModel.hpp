@@ -13,6 +13,7 @@
 #include "Model.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "camera.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <GLFW/glfw3.h>
@@ -30,7 +31,9 @@ class MyApplication : public Application {
 
  protected:
   virtual void loop();
-  void processInput(GLFWwindow *window);
+  static void mouse_callback(GLFWwindow *window, double xpos, double ypos);         // *鼠标位置回调*
+  static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);  // *鼠标滚轮回调*
+  void processInput(GLFWwindow *window);                                            // *窗口输入*
 
  private:
   // shader & program
@@ -41,12 +44,8 @@ class MyApplication : public Application {
   Model* mesh = nullptr;
   Texture* texture = nullptr;
 
-  float startTime = static_cast<float>(glfwGetTime());
-  /* Matrices */
-  glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
-  glm::mat4 world_matrix = glm::mat4(1.0f);
-  glm::mat4 view_matrix = glm::mat4(1.0f);
-  glm::mat4 projection_matrix = glm::mat4(1.0f);
+  // camera
+  // std::shared_ptr<Camera> camera{}; //相机位置
 };
 
 #endif  // MY_MODEL_HPP

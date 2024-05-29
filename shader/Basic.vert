@@ -8,15 +8,15 @@ out vec3 o_position;
 out vec3 o_normal;
 out vec2 o_texcoord;
 	
-uniform mat4 world;
+uniform mat4 model;
 uniform mat4 viewProj;
-uniform mat3 normalMatrix;
+uniform mat4 projection;
 	
 void main()
 {
-	o_position = vec3(world * vec4(position, 1.0f));
-    o_normal   = normalMatrix * normal;
+	o_position = vec3(model * vec4(position, 1.0f));
+    o_normal   = mat3(transpose(inverse(model))) * normal;
     o_texcoord = texcoord.xy;
 	
-    gl_Position = viewProj * world * vec4(position, 1.0f);
+    gl_Position = projection * viewProj * model * vec4(position, 1.0f);
 }
