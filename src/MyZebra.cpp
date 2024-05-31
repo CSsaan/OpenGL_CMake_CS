@@ -61,6 +61,7 @@ void MyZebra::render() {
   shaderProgram.setUniform("model", model);
   shaderProgram.setUniform("IGlobalTime", static_cast<float>(glfwGetTime()));
   shaderProgram.setUniform("iResolution", glm::vec2(1.0f*WINDOW_WIDTH, 1.0f*WINDOW_HEIGHT));
+  shaderProgram.setUniform("iLowHighThreads", lowHigtThreads);
   glCheckError(__FILE__, __LINE__);
   texture->bind(0);
   glDrawArrays(GL_TRIANGLES, 0, 6);

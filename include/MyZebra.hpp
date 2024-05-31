@@ -37,5 +37,6 @@ class MyZebra : public Application {
   Shader fragmentShader{SHADER_DIR "/Zebra.frag", GL_FRAGMENT_SHADER};
   ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
   std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+  glm::vec2 lowHigtThreads{0.3f, 0.6f};
   void render();
 };
