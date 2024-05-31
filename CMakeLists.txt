@@ -9,7 +9,7 @@ file(GLOB SRC_FILES "src/*.cpp") # 获取src目录下的所有源文件
 add_executable(${PEOJECT_NAME} ${SRC_FILES})
 
 
-set_property(TARGET ${PEOJECT_NAME} PROPERTY CXX_STANDARD 11)
+set_property(TARGET ${PEOJECT_NAME} PROPERTY CXX_STANDARD 14)
 target_compile_options(${PEOJECT_NAME} PRIVATE -Wall)
 
 add_definitions(-DGLEW_STATIC)

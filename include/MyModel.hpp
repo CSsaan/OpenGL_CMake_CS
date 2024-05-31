@@ -1,51 +1,45 @@
 /**
- * MyApplication.hpp skeleton
+ * MyModel.hpp skeleton
  * Contributors:
  *      * CS
  * Licence:
  *      * MIT
  */
 
-#ifndef MY_MODEL_HPP
-#define MY_MODEL_HPP
+#pragma once
 
-#include "Application.hpp"
-#include "Model.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
-#include "camera.hpp"
-
+ #include "Application.hpp"
+ #include "Model.hpp"
+ #include "Shader.hpp"
+ #include "Texture.hpp"
+ #include "camera.hpp"
+ 
 #define GLM_ENABLE_EXPERIMENTAL
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/matrix_operation.hpp>
+ #include <GLFW/glfw3.h>
+ #include <glm/glm.hpp>
+ #include <glm/gtc/matrix_transform.hpp>
+ #include <glm/gtx/matrix_operation.hpp>
+ 
+ #include "asset.hpp"
+ #include "glError.hpp"
 
-#include "asset.hpp"
-#include "glError.hpp"
-
-class MyApplication : public Application {
+class MyModel : public Application {
  public:
-  MyApplication();
-  ~MyApplication();
+  MyModel();
+  ~MyModel() = default;
 
  protected:
-  virtual void loop();
-  static void mouse_callback(GLFWwindow *window, double xpos, double ypos);         // *鼠标位置回调*
-  static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);  // *鼠标滚轮回调*
-  void processInput(GLFWwindow *window);                                            // *窗口输入*
+  void loop() override;
+  static void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+  static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+  void processInput(GLFWwindow *window);
 
  private:
-  // shader & program
-  Shader vertexShader;
-  Shader fragmentShader;
-  ShaderProgram shaderProgram;
-  // Model
-  Model* mesh = nullptr;
-  Texture* texture = nullptr;
-
-  // camera
-  // std::shared_ptr<Camera> camera{}; //相机位置
+  Shader vertexShader{SHADER_DIR "/3dmodel.vert", GL_VERTEX_SHADER};
+  Shader fragmentShader{SHADER_DIR "/3dmodel.frag", GL_FRAGMENT_SHADER};
+  ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
+  std::unique_ptr<Model> mesh = std::make_unique<Model>(RES_DIR "/models/alliance.obj");
+  std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+  void render();
 };
 
-#endif  // MY_MODEL_HPP

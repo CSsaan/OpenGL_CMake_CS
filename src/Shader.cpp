@@ -203,6 +203,10 @@ void ShaderProgram::setUniform(const std::string& name, const mat3& m) {
   glUniformMatrix3fv(uniform(name), 1, GL_FALSE, value_ptr(m));
 }
 
+void ShaderProgram::setUniform(const std::string& name, const vec2& v) {
+  glUniform2fv(uniform(name), 1, value_ptr(v));
+}
+
 void ShaderProgram::setUniform(const std::string& name, float val) {
   glUniform1f(uniform(name), val);
 }

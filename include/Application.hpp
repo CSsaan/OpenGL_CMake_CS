@@ -10,6 +10,7 @@
 #define OPENGL_CMAKE_SKELETON_APPLICATION_HPP
 
 #include <string>
+#include <memory>
 
 struct GLFWwindow;
 
