@@ -9,20 +9,14 @@
  * @date 08/29/2022
  ******************************************************************************
  */
-#ifndef CAMERA_HPP
-#define CAMERA_HPP
+#pragma once
 
-#ifndef __GLM_HPP__
 #include <glm/glm.hpp>
-#endif
-#ifndef __MATRIX_TRANSFORM_HPP__
 #include <glm/gtc/matrix_transform.hpp>
-#endif
-
 #include <vector>
 
 // 定义窗口输入的相机移动动作
-enum Camera_Movement
+enum class Camera_Movement
 {
     FORWARD,
     BACKWARD,
@@ -30,44 +24,33 @@ enum Camera_Movement
     RIGHT
 };
 
-// 相机默认值
-static const float YAW = -90.0f;             //偏航角
-static const float PITCH = 0.0f;             //俯仰角
-static const float SPEED = 4.5f;             // WASD移动速度2.5f
-static const float SENSITIVITY = 0.1f;       //鼠标灵敏度
-static const float ZOOM = 45.0f;             //缩放
-static const float SCROLL_SENSITIVITY = 2.0f;//滚轮灵敏度
-
 // 相机抽象类
 class Camera
 {
 public:
-    // 相机变量
-    glm::vec3 Position; //相机位置
-    glm::vec3 Front;    //相机方向(z轴)
-    glm::vec3 Up;       //上方向量（y轴）
-    glm::vec3 Right;    //右侧向量（x轴）
-    glm::vec3 WorldUp;  //
     // 欧拉角
-    float Yaw;
-    float Pitch;
+    float Yaw{-90.0f}; //偏航角
+    float Pitch{0.0f}; //俯仰角
+    // 相机变量
+    glm::vec3 Position{0.0f, 0.0f, 0.0f}; //相机位置
+    glm::vec3 Front{0.0f, 0.0f, -1.0f};   //相机方向(z轴)
+    glm::vec3 Up;                         //上方向量（y轴）
+    glm::vec3 Right;                      //右侧向量（x轴）
+    glm::vec3 WorldUp{0.0f, 1.0f, 0.0f};
     // camera options
-    float MovementSpeed;
-    float MouseSensitivity;
-    float Zoom;
-    float ScrollSensitivity;
+    float MovementSpeed{4.5f};    // WASD移动速度
+    float MouseSensitivity{0.1f}; // 鼠标灵敏度
+    float Zoom{45.0f};            // 缩放
+    float ScrollSensitivity{2.0f};// 滚轮灵敏度
 
     // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), ScrollSensitivity(SCROLL_SENSITIVITY)
+    Camera(glm::vec3 position)
     {
         Position = position;
-        WorldUp = up;
-        Yaw = yaw;
-        Pitch = pitch;
         updateCameraVectors();
     }
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), ScrollSensitivity(SCROLL_SENSITIVITY)
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
@@ -76,8 +59,10 @@ public:
         updateCameraVectors();
     }
 
+    ~Camera() = default;
+
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
+    glm::mat4 GetViewMatrix() const
     {
         return glm::lookAt(Position, Position + Front, Up); //相机位置、目标位置、上向量
     }
@@ -86,41 +71,35 @@ public:
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
-            Position += Front * velocity;
-        if (direction == BACKWARD)
-            Position -= Front * velocity;
-        if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
-            Position += Right * velocity;
+        const auto& movement = [&]() {
+            switch (direction) {
+                case Camera_Movement::FORWARD:
+                    return Front;
+                case Camera_Movement::BACKWARD:
+                    return -Front;
+                case Camera_Movement::LEFT:
+                    return -Right;
+                default:
+                    return Right;
+            }
+        }();
+        Position += movement * velocity;
     }
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true, GLboolean PitchReversed = true)
+    void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true, bool PitchReversed = true)
     {
         xoffset *= MouseSensitivity;
         yoffset *= MouseSensitivity;
 
         Yaw += xoffset;
-        if (PitchReversed)
-        {
+        if (PitchReversed) 
             Pitch += yoffset;
-        }
         else
             Pitch -= yoffset;
-
-        // std::cout<<yoffset<<":"<<Pitch<<std::endl;
-
         // make sure that when pitch is out of bounds, screen doesn't get flipped
         if (constrainPitch)
-        {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = -89.0f;
-        }
-
+            Pitch = glm::clamp(Pitch, -89.0f, 89.0f);
         // update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
     }
@@ -128,11 +107,8 @@ public:
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        Zoom -= (float)yoffset * ScrollSensitivity;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        Zoom -= yoffset * ScrollSensitivity;
+        Zoom = glm::clamp(Zoom, 1.0f, 45.0f);
     }
 
 private:
@@ -141,13 +117,12 @@ private:
     {
         // calculate the new Front vector
         glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.x = std::cos(glm::radians(Yaw)) * std::cos(glm::radians(Pitch));
+        front.y = std::sin(glm::radians(Pitch));
+        front.z = std::sin(glm::radians(Yaw)) * std::cos(glm::radians(Pitch));
         Front = glm::normalize(front);
         // also re-calculate the Right and Up vector（叉乘计算右轴和上轴）
         Right = glm::normalize(glm::cross(Front, WorldUp)); // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         Up = glm::normalize(glm::cross(Right, Front));
     }
 };
-#endif // CAMERA_HPP

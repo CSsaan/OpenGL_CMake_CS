@@ -24,22 +24,18 @@
  #include "glError.hpp"
 
 class MyModel : public Application {
- public:
-  MyModel();
-  ~MyModel() = default;
+public:
+    MyModel();
+    ~MyModel() = default;
 
- protected:
-  void loop() override;
-  static void mouse_callback(GLFWwindow *window, double xpos, double ypos);
-  static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-  void processInput(GLFWwindow *window);
+protected:
+    void loop() override;
+    static void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+    static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+    void processInput(GLFWwindow *window);
 
- private:
-  Shader vertexShader{SHADER_DIR "/3dmodel.vert", GL_VERTEX_SHADER};
-  Shader fragmentShader{SHADER_DIR "/3dmodel.frag", GL_FRAGMENT_SHADER};
-  ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
-  std::unique_ptr<Model> mesh = std::make_unique<Model>(RES_DIR "/models/alliance.obj");
-  std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-  void render();
+private:
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/3dmodel.vert", SHADER_DIR "/3dmodel.frag");
+    std::unique_ptr<Model> ourModel = std::make_unique<Model>(RES_DIR "/models/nanosuit/nanosuit.obj");
+    void render();
 };
-

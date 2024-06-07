@@ -22,21 +22,18 @@
 #include "glError.hpp"
 
 class MyZebra : public Application {
- public:
-  MyZebra();
-  ~MyZebra() = default;
+public:
+    MyZebra();
+    ~MyZebra() = default;
 
- protected:
-  void loop() override;
-  void processInput(GLFWwindow *window);
+protected:
+    void loop() override;
+    void processInput(GLFWwindow *window);
 
- private:
-  unsigned int VAO{};
-  // shader & program
-  Shader vertexShader{SHADER_DIR "/Zebra.vert", GL_VERTEX_SHADER};
-  Shader fragmentShader{SHADER_DIR "/Zebra.frag", GL_FRAGMENT_SHADER};
-  ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
-  std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-  glm::vec2 lowHigtThreads{0.3f, 0.6f};
-  void render();
+private:
+    unsigned int VAO{0};
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Zebra.vert", SHADER_DIR "/Zebra.frag");
+    std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+    glm::vec2 lowHigtThreads{0.3f, 0.6f};
+    void render();
 };

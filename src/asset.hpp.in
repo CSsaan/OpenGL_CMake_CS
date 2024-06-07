@@ -1,7 +1,0 @@
-namespace asset {
-#define SHADER_DIR "@CMAKE_SOURCE_DIR@/shader"
-#define ROOT_DIR "@CMAKE_SOURCE_DIR@/"
-#define RES_DIR "@CMAKE_SOURCE_DIR@/res"
-#define WINDOW_WIDTH (640)
-#define WINDOW_HEIGHT (480)
-}

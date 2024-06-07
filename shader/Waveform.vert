@@ -9,6 +9,6 @@ out vec2 o_texcoord;
 	
 void main()
 {
-    o_texcoord = texcoord.xy;
+    o_texcoord = vec2(texcoord.x, 1.0f - texcoord.y);
     gl_Position = model * vec4(position, 1.0f);
 }

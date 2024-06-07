@@ -18,12 +18,17 @@ Functionality:
 
 Requirements:
 - C++14 Compiler (GCC 4.8+, Clang 3.4+, MSVC 2015+)
-- CMake 3.0+
+- CMake 3.5+
 
 <div style="display:flex;">
     <img src="res/readme_img/3Dmodel.gif" width="300" />
     <img src="res/readme_img/Pseudocolor.png" width="300" />
     <img src="res/readme_img/Zebra.gif" width="300" />
+    <img src="res/readme_img/Waveform.jpg" width="300" />
+</div>
+
+<div style="display:flex;">
+    <img src="res/readme_img/Skinsmoothing.gif" width="300" />
 </div>
 
 Clone the Repository (With Submodules):

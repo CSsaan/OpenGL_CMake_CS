@@ -22,22 +22,19 @@
 #include "glError.hpp"
 
 class MyPseudocolor : public Application {
- public:
-  MyPseudocolor();
-  ~MyPseudocolor() = default;
+public:
+    MyPseudocolor();
+    ~MyPseudocolor() = default;
 
- protected:
-  void loop() override;
-  void processInput(GLFWwindow *window);
+protected:
+    void loop() override;
+    void processInput(GLFWwindow *window);
 
- private:
-  unsigned int VAO{};
-  // shader & program
-  Shader vertexShader{SHADER_DIR "/Pseudocolor.vert", GL_VERTEX_SHADER};
-  Shader fragmentShader{SHADER_DIR "/Pseudocolor.frag", GL_FRAGMENT_SHADER};
-  ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
-  std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-  std::unique_ptr<Texture> texture_lut = std::make_unique<Texture>();
-  void render();
+private:
+    unsigned int VAO{0};
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Pseudocolor.vert", SHADER_DIR "/Pseudocolor.frag");
+    std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+    std::unique_ptr<Texture> texture_lut = std::make_unique<Texture>();
+    void render();
 };
 

@@ -4,45 +4,50 @@ in vec2 o_texcoord;
 
 layout(binding = 0) uniform sampler2D tex_sampler;
 
-uniform float IGlobalTime;
 uniform vec2 iResolution;
-uniform vec2 iLowHighThreads;
 
 layout(location = 0) out vec4 fragColor;
 
-#define STRIPES 80.0
-#define PW STRIPES / iResolution.y
-#define PI 3.141592
-const float whiteAlpha = 0.6;
-const float blackAlpha = 0.8;
-
-mat2 rotate2d(float angle)
+float getY(vec2 coord)
 {
-    return mat2 (cos(angle), -sin(angle), sin(angle), cos(angle)) ;
+    return dot(texture(tex_sampler, coord).rgb, vec3(0.2125, 0.7154, 0.0721));
 }
-float zebra(in vec2 uv)
+
+vec4 waveform_graph()
 {
-    float shift = mod(IGlobalTime * 6.0, 12.0) * 0.2 * 0.03;
-    uv.y-= shift;
-    uv*=rotate2d(PI/4.0);
-    uv = fract(uv* STRIPES);
-    // 清晰边缘： return ((1.-step(0.2-PW, uv.y)) + step(0.6-PW, uv.y)); // 平滑边缘： return ((1.-step(0.2-PW, 0.2+PW, uv.y)) + step(0.6-PW, 0.6+PW, uv.y));
-    return ((1.-step(0.2-PW, uv.y)) + step(0.6-PW, uv.y));
+	lowp vec2 uv = o_texcoord;
+	int hres = 1080;
+	float intensity = 0.028;
+	const float thres = 1.0/iResolution.y;
+	float factor = 1.0;
+	float s = uv.y * 1.090 - 0.045;
+	float maxb = s + thres;
+	float minb = s - thres;
+    float col = 0.0;
+	lowp vec4 result;
+	{
+		for (int i = 0; i <= hres; i++)
+		{
+			float dy = float(i) / float(hres);
+			float xc = getY(vec2(uv.x, 1.0 - dy));
+			col += intensity * step(xc, maxb) * step(minb, xc);
+			float l = xc * xc;
+			col += intensity * step(l, maxb * maxb) * step(minb * minb, l);
+		}
+		col = col * factor;
+		result = vec4(col, col, col, 1.0);
+	}
+	return result;
 }
 
 void main()
-{   
-    vec2 uv = o_texcoord;
-    vec4 px = texture(tex_sampler, o_texcoord);
-    vec4 zcolor;
-    vec4 result = px;
-    
-    zcolor = vec4(zebra(uv));
-    
-    if(px.g > iLowHighThreads.x  && px.g < iLowHighThreads.y)
-    {
-        result = zcolor.r>0.5?(mix(result,zcolor,whiteAlpha)):(mix(result,zcolor,blackAlpha));
+{       
+    vec3 resultcolor = waveform_graph().rgb; 
+
+	if ( ((o_texcoord.x >= 0.995 || o_texcoord.x <= 0.005 || o_texcoord.y >= 0.995 || o_texcoord.y <= 0.005)) )
+    { 
+        resultcolor = vec3(1.0, 1.0, 1.0);
     }
 
-    fragColor = result;
+    fragColor = vec4(resultcolor, 1.0); 
 }

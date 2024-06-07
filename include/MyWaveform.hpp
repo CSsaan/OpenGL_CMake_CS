@@ -22,21 +22,18 @@
 #include "glError.hpp"
 
 class MyWaveform : public Application {
- public:
-  MyWaveform();
-  ~MyWaveform() = default;
+public:
+    MyWaveform();
+    ~MyWaveform();
 
- protected:
-  void loop() override;
-  void processInput(GLFWwindow *window);
+protected:
+    void loop() override;
+    void processInput(GLFWwindow *window);
 
- private:
-  unsigned int VAO{};
-  // shader & program
-  Shader vertexShader{SHADER_DIR "/Waveform.vert", GL_VERTEX_SHADER};
-  Shader fragmentShader{SHADER_DIR "/Waveform.frag", GL_FRAGMENT_SHADER};
-  ShaderProgram shaderProgram{{vertexShader, fragmentShader}};
-  std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-  glm::vec2 lowHigtThreads{0.3f, 0.6f};
-  void render();
+private:
+    unsigned int VAO{};
+    std::unique_ptr<Shader> shaderProgram_original = std::make_unique<Shader>(SHADER_DIR "/Basic.vert", SHADER_DIR "/Basic.frag");
+    std::unique_ptr<Shader> shaderProgram_waveform = std::make_unique<Shader>(SHADER_DIR "/Waveform.vert", SHADER_DIR "/Waveform.frag");
+    std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+    void render();
 };
