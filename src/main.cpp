@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]) {
             app = std::make_unique<MyZebra>(); // Zebra
             break;
         case 4:
-            app = std::make_unique<MyWaveform>(); // Luma Waveform   // TODO: RGB Waveform
+            app = std::make_unique<MyWaveform>(0); // Luma Waveform   // TODO: RGB Waveform
             break;
         case 5:
             app = std::make_unique<MyHistogram>(); // TODO: Histogram

@@ -32,7 +32,7 @@ protected:
 
 private:
     unsigned int VAO{0};
-    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Pseudocolor.vert", SHADER_DIR "/Pseudocolor.frag");
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Pseudocolor/Pseudocolor.vert", SHADER_DIR "/Pseudocolor/Pseudocolor.frag");
     std::unique_ptr<Texture> texture = std::make_unique<Texture>();
     std::unique_ptr<Texture> texture_lut = std::make_unique<Texture>();
     void render();

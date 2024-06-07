@@ -35,7 +35,7 @@ protected:
     void processInput(GLFWwindow *window);
 
 private:
-    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/3dmodel.vert", SHADER_DIR "/3dmodel.frag");
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/3dmodel/3dmodel.vert", SHADER_DIR "/3dmodel/3dmodel.frag");
     std::unique_ptr<Model> ourModel = std::make_unique<Model>(RES_DIR "/models/nanosuit/nanosuit.obj");
     void render();
 };

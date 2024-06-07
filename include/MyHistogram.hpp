@@ -33,7 +33,7 @@ protected:
 
 private:
     unsigned int VAO{0};
-    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Zebra.vert", SHADER_DIR "/Zebra.frag");
+    std::unique_ptr<Shader> shaderProgram = std::make_unique<Shader>(SHADER_DIR "/Zebra/Zebra.vert", SHADER_DIR "/Zebra/Zebra.frag");
     std::unique_ptr<Texture> texture = std::make_unique<Texture>();
     glm::vec2 lowHigtThreads{0.3f, 0.6f};
     void render();

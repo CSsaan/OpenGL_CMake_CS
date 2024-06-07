@@ -10,10 +10,24 @@
 #include <iostream>
 #include <vector>
 
-MyWaveform::MyWaveform() {
+MyWaveform::MyWaveform(int selectShader) {
+    if(selectShader == 0) {
+        vertPath = "/Waveform/Waveform.vert";
+        fragPath = "/Waveform/Waveform.frag";
+    }
+    else if(selectShader == 1) { // TODO: RGB
+        vertPath = "/Waveform/Waveform_2.vert";
+        fragPath = "/Waveform/Waveform_2.frag";
+    }
+    else if(selectShader == 2) { // TODO: 3RGB
+        vertPath = "/Waveform/Waveform_3.vert";
+        fragPath = "/Waveform/Waveform_3.frag";
+    }
+    shaderProgram_waveform = std::make_unique<Shader>((SHADER_DIR + vertPath).c_str(), (SHADER_DIR + fragPath).c_str());
+
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_DST_COLOR);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     texture->load(RES_DIR "/picture/Sunset.jpg");
     texture->bind(0);
     glCheckError(__FILE__, __LINE__);
