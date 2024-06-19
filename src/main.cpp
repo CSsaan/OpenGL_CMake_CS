@@ -42,16 +42,34 @@ int main(int argc, const char* argv[]) {
             app = std::make_unique<MyZebra>(); // Zebra
             break;
         case 4:
-            app = std::make_unique<MyWaveform>(0); // Luma Waveform   // TODO: RGB Waveform
+            app = std::make_unique<MyWaveform>(0); // Waveform-Luma
             break;
         case 5:
-            app = std::make_unique<MyHistogram>(); // TODO: Histogram
+            app = std::make_unique<MyWaveform>(1); // Waveform-RGB
             break;
         case 6:
+            app = std::make_unique<MyWaveform>(2); // Waveform-RGB split
+            break;
+        case 7:
+            app = std::make_unique<MyHistogram>(0); // Histogram-RGB
+            break;
+        case 8:
+            app = std::make_unique<MyHistogram>(1); // Histogram-Luma
+            break;
+        case 9:
+            app = std::make_unique<MyHistogram>(2); // Histogram-R
+            break;
+        case 10:
+            app = std::make_unique<MyHistogram>(3); // Histogram-G
+            break;
+        case 11:
+            app = std::make_unique<MyHistogram>(4); // Histogram-B
+            break;
+        case 12:
             app = std::make_unique<MySkinsmooth>(); // Skinsmooth
             break;
         default:
-            std::cerr << "Unrecognized app index: " << app_index << std::endl;
+            std::cerr << "[ERROR] Unrecognized app index: " << app_index << std::endl;
             app = std::make_unique<MyModel>();
             return 1;
     }

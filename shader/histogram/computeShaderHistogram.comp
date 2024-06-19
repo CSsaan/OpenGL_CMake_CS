@@ -1,0 +1,63 @@
+// #version 430 core
+
+// ----------------------------------------------------------------------------
+//
+// gl_NumWorkGroups: glDispatchCompute()设置已调度的工作组数量
+// gl_WorkGroupSize: 操作的工作组(local size)的大小由布局定义
+// gl_WorkGroupID: 当前正在操作的工作组的索引
+// gl_LocalInvocationID: 工作组中当前工作项的索引
+// gl_GlobalInvocationID: 当前工作项的全局索引(gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID)
+// gl_LocalInvocationIndex: gl_LocalInvocationID的1维索引表示 (gl_LocalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y + gl_LocalInvocationID.y * gl_WorkGroupSize.x + gl_LocalInvocationID.x)
+//
+// ----------------------------------------------------------------------------
+
+// layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
+
+// // uniforms
+// layout(rgba32f, binding = 0) uniform image2D imgOutput;
+// layout (location = 0) uniform float t; /** Time */
+
+// void main() {
+// 	vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
+// 	ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+// 	float speed = 100;
+// 	// the width of the texture
+// 	float width = 1000;
+// 	value.x = mod(float(texelCoord.x) + t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+// 	value.y = float(texelCoord.y)/(gl_NumWorkGroups.y*gl_WorkGroupSize.y);
+// 	imageStore(imgOutput, texelCoord, value);
+// }
+
+
+
+
+
+
+#version 430 core 
+
+layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0, rgba8) uniform readonly image2D inputImage;
+layout(std430, binding = 1) buffer HistogramBuffer {
+    uint histogramY[256];
+    uint histogramR[256];
+    uint histogramG[256];
+    uint histogramB[256];
+};
+
+void main() {
+    // // Reset histogram to 0 at the beginning of each frame
+    // if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0) {
+    //     for (int i = 0; i < 256; i++) {
+    //         histogram[i] = 0;
+    //     }
+    // }
+    // barrier(); // Ensure all invocations have reset the histogram before proceeding
+
+    ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+    vec4 pixelColor = imageLoad(inputImage, pixelCoord);
+    atomicAdd(histogramY[int((0.2126 * pixelColor.r + 0.7152 * pixelColor.g + 0.0722 * pixelColor.b) * 255.0)], 1);
+    atomicAdd(histogramR[int(pixelColor.r * 255.0)], 1);
+    atomicAdd(histogramG[int(pixelColor.g * 255.0)], 1);
+    atomicAdd(histogramB[int(pixelColor.b * 255.0)], 1);
+}

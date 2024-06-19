@@ -35,8 +35,8 @@ protected:
 
 private:
     unsigned int VAO{0};
-    std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-    std::unique_ptr<Texture> texture_aiMask = std::make_unique<Texture>();
+    std::unique_ptr<Texture> texture = std::make_unique<Texture>(RES_DIR "/picture/face5.jpg");
+    std::unique_ptr<Texture> texture_aiMask = std::make_unique<Texture>(RES_DIR "/picture/face5_aiMask.jpg");
     // YCbCrSkinMask
     std::unique_ptr<Fbo> fbo_YCbCrSkinMask = std::make_unique<Fbo>(WINDOW_WIDTH/DOWN_SAMPLE_RATIO, WINDOW_HEIGHT/DOWN_SAMPLE_RATIO);
     std::unique_ptr<Shader> shaderProgram_YCbCrSkinMask = std::make_unique<Shader>(SHADER_DIR "/Skinsmoothing/YCbCrSkinMask.vert", SHADER_DIR "/Skinsmoothing/YCbCrSkinMask.frag");

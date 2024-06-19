@@ -13,11 +13,6 @@
 
 MySkinsmooth::MySkinsmooth() {
     glDisable(GL_DEPTH_TEST);
-    texture->load(RES_DIR "/picture/face5.jpg");
-    texture->bind(0);
-    texture_aiMask->load(RES_DIR "/picture/face5_aiMask.jpg");
-    texture_aiMask->bind(1);
-    glCheckError(__FILE__, __LINE__);
 
     unsigned int VBO;
     glGenVertexArrays(1, &VAO);

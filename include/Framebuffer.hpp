@@ -10,6 +10,7 @@
  *      fbo->unbind();
  *      fbo.getFboId();
  *      fbo.getTexId();
+ *      fbo.bindTexture();
  */
 
 #pragma once

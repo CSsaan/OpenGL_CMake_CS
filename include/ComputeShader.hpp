@@ -11,60 +11,50 @@
 #define GLM_FORCE_RADIANS
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include <initializer_list>
-#include <map>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-class Shader {
+class ComputeShader {
 public:
     unsigned int ID; // program ID
     // ------------------------------------------------------------------------
-    Shader(const char *vertexPath, const char *fragmentPath) {
+    ComputeShader(const char* computePath) {
         // 1. 从文件路径中获取顶点/片段着色器
-        std::string vertexCode;
-        std::string fragmentCode;
-        std::ifstream vShaderFile;
-        std::ifstream fShaderFile;
-        vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        std::string computeCode;
+        std::ifstream cShaderFile;
+        // ensure ifstream objects can throw exceptions:
+        cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         try {
-            vShaderFile.open(vertexPath);
-            fShaderFile.open(fragmentPath);
-            std::stringstream vShaderStream, fShaderStream;
-            vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
-            vShaderFile.close();
-            fShaderFile.close();
-            vertexCode = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
+            // open files
+            cShaderFile.open(computePath);
+            std::stringstream cShaderStream;
+            // read file's buffer contents into streams
+            cShaderStream << cShaderFile.rdbuf();
+            // close file handlers
+            cShaderFile.close();
+            // convert stream into string
+            computeCode = cShaderStream.str();
         }
-        catch (std::ifstream::failure &e) {
-            std::cout <<"["<<vertexPath<<"]:" <<"["<<fragmentPath<<"]:" << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
+        catch (std::ifstream::failure& e) {
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         }
-        const char *vShaderCode = vertexCode.c_str();
-        const char *fShaderCode = fragmentCode.c_str();
-        unsigned int vertex, fragment;
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
-
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
-
+        const char* cShaderCode = computeCode.c_str();
+        // 2. compile shaders
+        unsigned int compute;
+        // compute shader
+        compute = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(compute, 1, &cShaderCode, NULL);
+        glCompileShader(compute);
+        checkCompileErrors(compute, "COMPUTE");
+        // shader Program
         ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, fragment);
+        glAttachShader(ID, compute);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
-
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
+        // delete the shaders as they're linked into our program now and no longer necessary
+        glDeleteShader(compute);
     }
     // ------------------------------------------------------------------------
     void use() const {

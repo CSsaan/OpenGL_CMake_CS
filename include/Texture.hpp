@@ -1,4 +1,4 @@
-﻿/** 
+/** 
  * Code taken from www.learnopengl.com
  * Contributors:
  *      * Arthur CS (author)
@@ -16,7 +16,9 @@
 class Texture final
 {
 public:
-    Texture() = default;
+    Texture(const std::string & image_dir){
+        load(image_dir);
+    };
     ~Texture() {
         if(texture_id != 0) {
             glDeleteTextures(1, &texture_id);
@@ -24,6 +26,14 @@ public:
         }
     }
 
+    void bind(GLuint index = 0) const {
+        if(texture_id != 0) {
+            glActiveTexture(GL_TEXTURE0 + index);
+            glBindTexture(GL_TEXTURE_2D, texture_id);
+        }
+    }
+
+private:
     bool load(const std::string & file_name) {
         if(file_name.empty()) {
             return false;
@@ -69,13 +79,6 @@ public:
         return true;
     }
     
-    void bind(GLuint index = 0) const {
-        if(texture_id != 0) {
-            glActiveTexture(GL_TEXTURE0 + index);
-            glBindTexture(GL_TEXTURE_2D, texture_id);
-        }
-    }
-
 private:
     GLuint texture_id = 0;
     bool use_linear = true;

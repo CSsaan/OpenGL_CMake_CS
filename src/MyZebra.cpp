@@ -11,10 +11,6 @@
 #include <vector>
 
 MyZebra::MyZebra() {
-    texture->load(RES_DIR "/picture/Lakewater_trees.jpg");
-    texture->bind(0);
-    glCheckError(__FILE__, __LINE__);
-
     unsigned int VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);

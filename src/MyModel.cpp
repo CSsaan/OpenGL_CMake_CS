@@ -21,7 +21,14 @@ namespace {
 }
 
 MyModel::MyModel() {
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
     glCheckError(__FILE__, __LINE__);
+}
+
+MyModel::~MyModel() {
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
 }
 
 void MyModel::loop() {
@@ -52,7 +59,28 @@ void MyModel::render() {
     shaderProgram->setUniformMat4("model", model);
     shaderProgram->setUniformMat4("view", camera.GetViewMatrix());
     shaderProgram->setUniformMat4("projection", projection);
-    shaderProgram->setUniform3f("viewPos", camera.Position);
+    shaderProgram->setUniform3f("viewPos", camera.Position);// 相机观察位置
+    shaderProgram->setUniform1f("material.shininess", 128.0f); // 镜面反光度
+    // render light
+    glm::vec3 lightColor(1.0f);
+    // lightColor.x = abs(static_cast<float>(sin(glfwGetTime() * 1.0f))); // R
+    // lightColor.y = abs(static_cast<float>(sin(glfwGetTime() * 2.7f))); // G
+    // lightColor.z = abs(static_cast<float>(sin(glfwGetTime() * 4.3f))); // B
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);             // decrease the influence
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.5f);           // low influence
+    // direction light
+    shaderProgram->setUniform3f("dirLight.direction", -1.2f, -1.0f, -2.0f);
+    shaderProgram->setUniform3f("dirLight.ambient", 0.5f, 0.5f, 0.5f);
+    shaderProgram->setUniform3f("dirLight.diffuse", 0.5f, 0.5f, 0.5f);
+    shaderProgram->setUniform3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    // point light
+    shaderProgram->setUniform3f("pointLights.position", 0.7f, 0.2f, 2.0f);
+    shaderProgram->setUniform3f("pointLights.ambient", ambientColor);
+    shaderProgram->setUniform3f("pointLights.diffuse", diffuseColor);
+    shaderProgram->setUniform3f("pointLights.specular", 1.0f, 1.0f, 1.0f);
+    shaderProgram->setUniform1f("pointLights.constant", 1.0f); // 常数项系数（参照表格）
+    shaderProgram->setUniform1f("pointLights.linear", 0.35f);
+    shaderProgram->setUniform1f("pointLights.quadratic", 0.44f);
     glCheckError(__FILE__, __LINE__);
     ourModel->Draw(*shaderProgram);
     shaderProgram->unuse();

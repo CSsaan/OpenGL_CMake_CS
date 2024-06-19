@@ -26,7 +26,7 @@
 class MyModel : public Application {
 public:
     MyModel();
-    ~MyModel() = default;
+    ~MyModel();
 
 protected:
     void loop() override;

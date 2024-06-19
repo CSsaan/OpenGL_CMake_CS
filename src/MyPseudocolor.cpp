@@ -12,12 +12,6 @@
 
 
 MyPseudocolor::MyPseudocolor() {
-    texture->load(RES_DIR "/picture/Lakewater_trees.jpg");
-    texture->bind(0);
-    texture_lut->load(RES_DIR "/picture/Pseudocolor3DLUT.png");
-    texture_lut->bind(1);
-    glCheckError(__FILE__, __LINE__);
-
     unsigned int VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
