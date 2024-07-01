@@ -5,22 +5,36 @@
  * Licence:
  *      * MIT
  */
-#include "MyModel.hpp"
-
 #include <iostream>
 #include <vector>
 
+#include "MyModel.hpp"
+
 namespace {
-    float lastX = WINDOW_WIDTH / 2.0f;
-    float lastY = WINDOW_HEIGHT / 2.0f;
-    bool firstMouse = true;
-    Camera camera(glm::vec3(0.0f, 0.0f, 10.0f));
-    // timing
-    float mDeltaTime = 0.0f; // 上下帧时间间隔初始化
-    float lastFrame = 0.0f;
-}
+bool captureMouse = false;
+float lastX = WINDOW_WIDTH / 2.0f;
+float lastY = WINDOW_HEIGHT / 2.0f;
+bool firstMouse = true;
+Camera camera(glm::vec3(0.0f, 0.0f, 10.0f));
+// timing
+float mDeltaTime = 0.0f;  // 上下帧时间间隔初始化
+float lastFrame = 0.0f;
+}  // namespace
 
 MyModel::MyModel() {
+    dirLight.direction = glm::vec3(-1.2f, -1.0f, -2.0f);
+    dirLight.ambient = 0.2f;
+    dirLight.diffuse = 0.5f;
+    dirLight.specular = 1.0f;
+
+    pointLight.position = glm::vec3(0.7f, 0.2f, 2.0f);
+    pointLight.ambient = 0.2f;
+    pointLight.diffuse = 0.5f;
+    pointLight.specular = 1.0f;
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.35f;
+    pointLight.quadratic = 0.44f;
+
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glCheckError(__FILE__, __LINE__);
@@ -31,18 +45,71 @@ MyModel::~MyModel() {
     glDisable(GL_DEPTH_TEST);
 }
 
+void MyModel::anotherImGui() {
+    // 3. Show another MyPseudocolor window.
+    if (show_another_window) {
+        ImGui::Begin("Another Window", &show_another_window);
+        ImGui::Text(("Hello from " + title + " window!").c_str());
+        ImGui::Spacing();
+
+        ImGui::SeparatorText("Options");
+
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Direction Light")) {
+            ImGui::ColorEdit3("light color", (float*)&dirLightColor);  // Edit 3 floats representing a color
+            ImGui::SliderFloat3("direction", (float*)&dirLight.direction, -2.0f, 2.0f);
+            ImGui::SliderFloat("ambient", &dirLight.ambient, 0.0f, 1.0f);
+            ImGui::SliderFloat("diffuse", &dirLight.diffuse, 0.0f, 1.0f);
+            ImGui::SliderFloat("specular", &dirLight.specular, 0.0f, 1.0f);
+        }
+
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Point Light")) {
+            ImGui::ColorEdit3("light color", (float*)&pointLightColor);  // Edit 3 floats representing a color
+            ImGui::SliderFloat("position", (float*)&pointLight.position, -20.0f, 20.0f);
+            ImGui::SliderFloat("specular", (float*)&pointLight.specular, 0.0f, 1.0f);
+            static int Attenuation = 0;
+            std::vector<std::vector<float>> AttenuationList = {{0.7, 1.8}, {0.35, 0.44}, {0.22, 0.20}, {0.14, 0.07}, {0.09, 0.032}, {0.07, 0.017}, {0.045, 0.0075}, {0.027, 0.0028}, {0.022, 0.0019}, {0.014, 0.0007}, {0.007, 0.0002}, {0.0014, 0.000007}};
+            ImGui::DragInt("Attenuation", &Attenuation, 0.1f, 0, 11);
+            pointLight.linear = AttenuationList[Attenuation][0];
+            pointLight.quadratic = AttenuationList[Attenuation][1];
+            ImGui::Text("linear: %f, quadratic: %f", pointLight.linear, pointLight.quadratic);
+        }
+
+        if (ImGui::Button("Save")) {
+            if (show_another_window) {
+                captureMouse = true;
+                show_another_window = false;
+                show_demo_window = false;
+            }
+        }
+
+        // close another MyPseudocolor window
+        ImGui::Spacing();
+        if (ImGui::Button("Close"))
+            show_another_window = false;
+
+        ImGui::End();
+    }
+}
+
 void MyModel::loop() {
     float currentFrame = static_cast<float>(glfwGetTime());
     mDeltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    processInput(getWindow());
-    glfwSetCursorPosCallback(getWindow(), mouse_callback);
-    glfwSetScrollCallback(getWindow(), scroll_callback);
-    glfwSetInputMode(getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    if (captureMouse) {
+        glfwSetInputMode(getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(getWindow(), mouse_callback);
+        glfwSetScrollCallback(getWindow(), scroll_callback);
+    }
+
     if (glfwWindowShouldClose(getWindow())) {
         exit();
         return;
     }
+
+    processInput(getWindow());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.6784f, 0.8f, 1.0f, 1.0f);
 
@@ -59,34 +126,33 @@ void MyModel::render() {
     shaderProgram->setUniformMat4("model", model);
     shaderProgram->setUniformMat4("view", camera.GetViewMatrix());
     shaderProgram->setUniformMat4("projection", projection);
-    shaderProgram->setUniform3f("viewPos", camera.Position);// 相机观察位置
-    shaderProgram->setUniform1f("material.shininess", 128.0f); // 镜面反光度
-    // render light
-    glm::vec3 lightColor(1.0f);
-    // lightColor.x = abs(static_cast<float>(sin(glfwGetTime() * 1.0f))); // R
-    // lightColor.y = abs(static_cast<float>(sin(glfwGetTime() * 2.7f))); // G
-    // lightColor.z = abs(static_cast<float>(sin(glfwGetTime() * 4.3f))); // B
-    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);             // decrease the influence
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.5f);           // low influence
+    shaderProgram->setUniform3f("viewPos", camera.Position);    // 相机观察位置
+    shaderProgram->setUniform1f("material.shininess", 128.0f);  // 镜面反光度
     // direction light
-    shaderProgram->setUniform3f("dirLight.direction", -1.2f, -1.0f, -2.0f);
-    shaderProgram->setUniform3f("dirLight.ambient", 0.5f, 0.5f, 0.5f);
-    shaderProgram->setUniform3f("dirLight.diffuse", 0.5f, 0.5f, 0.5f);
-    shaderProgram->setUniform3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    glm::vec3 diffuseColor = dirLightColor * glm::vec3(dirLight.diffuse);  // decrease the influence
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(dirLight.ambient);   // low influence
+    glm::vec3 specularColor = dirLightColor * glm::vec3(dirLight.specular);
+    shaderProgram->setUniform3f("dirLight.direction", dirLight.direction);
+    shaderProgram->setUniform3f("dirLight.ambient", ambientColor);
+    shaderProgram->setUniform3f("dirLight.diffuse", diffuseColor);
+    shaderProgram->setUniform3f("dirLight.specular", specularColor);
     // point light
-    shaderProgram->setUniform3f("pointLights.position", 0.7f, 0.2f, 2.0f);
+    diffuseColor = pointLightColor * glm::vec3(pointLight.diffuse);  // decrease the influence
+    ambientColor = diffuseColor * glm::vec3(pointLight.ambient);     // low influence
+    specularColor = pointLightColor * glm::vec3(pointLight.specular);
+    shaderProgram->setUniform3f("pointLights.position", pointLight.position);
     shaderProgram->setUniform3f("pointLights.ambient", ambientColor);
     shaderProgram->setUniform3f("pointLights.diffuse", diffuseColor);
-    shaderProgram->setUniform3f("pointLights.specular", 1.0f, 1.0f, 1.0f);
-    shaderProgram->setUniform1f("pointLights.constant", 1.0f); // 常数项系数（参照表格）
-    shaderProgram->setUniform1f("pointLights.linear", 0.35f);
-    shaderProgram->setUniform1f("pointLights.quadratic", 0.44f);
+    shaderProgram->setUniform3f("pointLights.specular", specularColor);
+    shaderProgram->setUniform1f("pointLights.constant", 1.0f);  // 常数项系数（参照表格）
+    shaderProgram->setUniform1f("pointLights.linear", pointLight.linear);
+    shaderProgram->setUniform1f("pointLights.quadratic", pointLight.quadratic);
     glCheckError(__FILE__, __LINE__);
     ourModel->Draw(*shaderProgram);
     shaderProgram->unuse();
 }
 
-void MyModel::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+void MyModel::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) noexcept {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
     if (firstMouse) {
@@ -101,8 +167,13 @@ void MyModel::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void MyModel::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void MyModel::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void MyModel::mymouse_callback_null(GLFWwindow* window, double xposIn, double yposIn) noexcept {
+}
+void MyModel::myscroll_callback_null(GLFWwindow* window, double xoffset, double yoffset) noexcept {
 }
 
 void MyModel::processInput(GLFWwindow* window) {
@@ -117,4 +188,8 @@ void MyModel::processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(Camera_Movement::LEFT, mDeltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(Camera_Movement::RIGHT, mDeltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::UP, mDeltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::DOWN, mDeltaTime);
 }

@@ -10,43 +10,95 @@
 #include <iostream>
 #include <vector>
 
-MyWaveform::MyWaveform(int selectShader) {
-    if(selectShader == 0) {
-        vertPath = "/Waveform/Waveform.vert";
-        fragPath = "/Waveform/Waveform.frag";
-    }
-    else if(selectShader == 1) {
-        vertPath = "/Waveform/Waveform.vert";
-        fragPath = "/Waveform/Waveform_RGB.frag";
-    }
-    else if(selectShader == 2) { // TODO: 3RGB
-        vertPath = "/Waveform/Waveform.vert";
-        fragPath = "/Waveform/Waveform_RGBsplit.frag";
-    }
+MyWaveform::MyWaveform() {
     shaderProgram_waveform = std::make_unique<Shader>((SHADER_DIR + vertPath).c_str(), (SHADER_DIR + fragPath).c_str());
+
+    // setting the window size and aspect ratio
+    setWindowAspectRatio(texture->getWidth(), texture->getHeight());
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    unsigned int VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
-    glCheckError(__FILE__, __LINE__);
 }
 
 MyWaveform::~MyWaveform() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
+}
+
+void MyWaveform::anotherImGui() {
+    // 3. Show another MyPseudocolor window.
+    if (show_another_window) {
+        ImGui::Begin("Another Window", &show_another_window);  // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        ImGui::Text(("Hello from " + title + " window!").c_str());
+        ImGui::Spacing();
+
+        ImGui::SeparatorText("Select Mode");
+        static int e = 0;
+        ImGui::RadioButton("Luma", &e, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("RGB", &e, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("RGB split", &e, 2);
+        if (e == 0) {
+            vertPath = "/Waveform/Waveform.vert";
+            fragPath = "/Waveform/Waveform.frag";
+        } else if (e == 1) {
+            vertPath = "/Waveform/Waveform.vert";
+            fragPath = "/Waveform/Waveform_RGB.frag";
+        } else if (e == 2) {
+            vertPath = "/Waveform/Waveform.vert";
+            fragPath = "/Waveform/Waveform_RGBsplit.frag";
+        }
+        shaderProgram_waveform.reset();  // 释放资源
+        shaderProgram_waveform = std::make_unique<Shader>((SHADER_DIR + vertPath).c_str(), (SHADER_DIR + fragPath).c_str());
+
+        // IMGUI_DEMO_MARKER("Image");
+        if (ImGui::CollapsingHeader("Image")) {
+            static ImGuiComboFlags flags = 0;
+            static int item_current_idx = 0;  // Here we store our selection data as an index
+            std::string combo_preview_value = imgPathItems[item_current_idx];
+
+            // checkbox for using local image path
+            ImGui::SeparatorText("Select Image");
+            static bool useLocalImgPath = false;
+            ImGui::Checkbox("Use Local Image", &useLocalImgPath);
+            ImGui::SameLine();
+            HelpMarker("Input image path, or Select image from directory.");
+            if (useLocalImgPath) {
+                static char buf1[1024] = "";
+                static bool inputComplete = false;
+                ImGui::InputText(" ", buf1, IM_ARRAYSIZE(buf1));
+                ImGui::SameLine();
+                ImGui::Checkbox("input image path", &inputComplete);
+                if (inputComplete) {
+                    texture->update(buf1);  // update the texture
+                    setWindowAspectRatio(texture->getWidth(), texture->getHeight());
+                }
+            } else if (ImGui::BeginCombo("select picture", combo_preview_value.c_str(), flags)) {
+                for (int n = 0; n < (int)imgPathItems.size(); n++) {
+                    const bool is_selected = (item_current_idx == n);
+                    if (ImGui::Selectable((RES_DIR + imgPathItems[n]).c_str(), is_selected)) {
+                        item_current_idx = n;
+                        texture->update(RES_DIR + imgPathItems[item_current_idx]);  // update the texture
+                        setWindowAspectRatio(texture->getWidth(), texture->getHeight());
+                    }
+                    if (is_selected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+        }
+
+        // close another MyPseudocolor window
+        ImGui::Spacing();
+        if (ImGui::Button("Close"))
+            show_another_window = false;
+
+        ImGui::End();
+    }
 }
 
 void MyWaveform::loop() {
@@ -81,9 +133,9 @@ void MyWaveform::render() {
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.5f, -0.5f, 0.0f));
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    model = glm::scale(model, glm::vec3(0.25f));
+    model = glm::scale(model, glm::vec3(0.25f, 0.25f * 0.75f * texture->getWidth() / texture->getHeight(), 0.25f));
     shaderProgram_waveform->setUniformMat4("model", model);
-    shaderProgram_waveform->setUniform2f("iResolution", glm::vec2(1.0f*WINDOW_WIDTH, 1.0f*WINDOW_HEIGHT));
+    shaderProgram_waveform->setUniform2f("iResolution", glm::vec2(1.0f * WINDOW_WIDTH, 1.0f * WINDOW_HEIGHT));
     glCheckError(__FILE__, __LINE__);
     texture->bind(0);
     glDrawArrays(GL_TRIANGLES, 0, 6);

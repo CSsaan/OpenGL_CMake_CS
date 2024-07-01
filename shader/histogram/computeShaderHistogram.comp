@@ -46,13 +46,16 @@ layout(std430, binding = 1) buffer HistogramBuffer {
 };
 
 void main() {
-    // // Reset histogram to 0 at the beginning of each frame
-    // if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0) {
-    //     for (int i = 0; i < 256; i++) {
-    //         histogram[i] = 0;
-    //     }
-    // }
-    // barrier(); // Ensure all invocations have reset the histogram before proceeding
+    // Reset histogram to 0 at the beginning of each frame
+    if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0) {
+        for (int i = 0; i < 256; i++) {
+            histogramY[i] = 0;
+            histogramR[i] = 0;
+            histogramG[i] = 0;
+            histogramB[i] = 0;
+        }
+    }
+    barrier(); // Ensure all invocations have reset the histogram before proceeding
 
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
     vec4 pixelColor = imageLoad(inputImage, pixelCoord);

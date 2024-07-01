@@ -33,13 +33,41 @@ public:
         }
     }
 
+    GLuint getTexId() const {
+        return texture_id;
+    }
+
+    int getWidth() const {
+        return width;
+    }
+
+    int getHeight() const {
+        return height;
+    }
+
+    int getComponents() const {
+        return components;
+    }
+
+    bool update(const std::string & file_name) {
+        if(file_name.empty()) {
+            return false;
+        }
+
+        if(texture_id != 0) {
+            glDeleteTextures(1, &texture_id);
+            texture_id = 0;
+        }  
+        std::cout << "updating picture:" << file_name << std::endl;
+        return load(file_name);
+    }
+
 private:
     bool load(const std::string & file_name) {
         if(file_name.empty()) {
             return false;
         }
 
-        int width, height, components;
         unsigned char* pixels = stbi_load((file_name).c_str(), &width, &height, &components, 0);
         if(pixels == nullptr) {
             std::cout << "Could not load file " << file_name << std::endl;
@@ -82,4 +110,5 @@ private:
 private:
     GLuint texture_id = 0;
     bool use_linear = true;
+    int width, height, components;
 };

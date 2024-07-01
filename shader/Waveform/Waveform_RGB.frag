@@ -28,9 +28,10 @@ void main()
     float minb = s-thres;
     
     for (int i = 0; i <= hres; i++) {
-        vec3 x = texture(tex_sampler, vec2(uv.x, float(i)/float(hres))).rgb;
+        vec3 x = texture(tex_sampler, vec2(uv.x, float(i)/float(hres))).rgb*1.8;
 		col += vec3(intensity)*step(x, vec3(maxb))*step(vec3(minb), x);
 
+		x = texture(tex_sampler, vec2(uv.x, float(i)/float(hres))).rgb;
 		float l = dot(x, x);
 		col += vec3(intensity)*step(l, maxb*maxb)*step(minb*minb, l);
     }

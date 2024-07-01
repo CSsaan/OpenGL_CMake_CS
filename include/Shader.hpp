@@ -17,6 +17,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 class Shader {
 public:

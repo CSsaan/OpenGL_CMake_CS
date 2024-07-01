@@ -27,24 +27,25 @@
 
 class MyHistogram : public Application {
 public:
-    MyHistogram(uint8_t selectColor = 0);
+    MyHistogram();
     ~MyHistogram();
 
 protected:
+    std::string title = "Histogram";
     void loop() override;
+    void anotherImGui() override;
     void processInput(GLFWwindow *window);
 
 private:
-    unsigned int VAO{0};
     int fCounter = 0;
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
     void InitComputeShader();
     GLuint histogramBuffer;
     unsigned char* pixels = nullptr;
-    int width, height, components;
+    int img_width, img_height, img_components;
     unsigned int inputTexture;
-    string imgPath = RES_DIR "/picture/Lakewater_trees.jpg";
+    const std::vector<std::string> imgPathItems = { "/picture/Lakewater_trees.jpg", "/picture/face5.jpg", "/picture/Sunset.jpg" };
     std::vector<int> useRGB_choseColor = {1, 0}; // 1:RGB_colors  other:One_color | 1: R, 2: G, 3: B, 4: Y
     float* GetTextureData(GLuint width, GLuint height, GLuint channels, GLuint texID);
     std::unique_ptr<ComputeShader> computeShader = std::make_unique<ComputeShader>(SHADER_DIR "/histogram/computeShaderHistogram.comp");

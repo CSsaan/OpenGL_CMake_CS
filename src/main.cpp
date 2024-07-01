@@ -7,17 +7,18 @@
  */
 #include "Framebuffer.hpp"
 
-
+#include "MyHistogram.hpp"
 #include "MyModel.hpp"
 #include "MyPseudocolor.hpp"
-#include "MyZebra.hpp"
-#include "MyWaveform.hpp"
-#include "MyHistogram.hpp"
 #include "MySkinsmooth.hpp"
+#include "MyVectorscope.hpp"
+#include "MyWaveform.hpp"
+#include "MyZebra.hpp"
 
 #include <memory>
 
-const std::string APP_WARNING_INFO = "please select application: 1:3DModel, 2:pseudocolor, 3:Zebra, 4:Waveform 5:Histogram, 6:Skinsmooth \n  \
+const std::string APP_WARNING_INFO =
+    "please select application: 1:3DModel, 2:pseudocolor, 3:Zebra, 4:Waveform 5:Histogram, 6:Skinsmooth \n  \
                                       Usage: ./opengl-cmake-cs.exe <app_index>";
 
 int main(int argc, const char* argv[]) {
@@ -33,40 +34,25 @@ int main(int argc, const char* argv[]) {
     int app_index = std::stoi(argv[1]);
     switch (app_index) {
         case 1:
-            app = std::make_unique<MyModel>(); // 3D Model
+            app = std::make_unique<MyModel>();  // 3D Model
             break;
         case 2:
-            app = std::make_unique<MyPseudocolor>(); // pseudocolor
+            app = std::make_unique<MyPseudocolor>();  // pseudocolor
             break;
         case 3:
-            app = std::make_unique<MyZebra>(); // Zebra
+            app = std::make_unique<MyZebra>();  // Zebra
             break;
         case 4:
-            app = std::make_unique<MyWaveform>(0); // Waveform-Luma
+            app = std::make_unique<MyWaveform>();  // Waveform
             break;
         case 5:
-            app = std::make_unique<MyWaveform>(1); // Waveform-RGB
+            app = std::make_unique<MyHistogram>();  // Histogram
             break;
         case 6:
-            app = std::make_unique<MyWaveform>(2); // Waveform-RGB split
+            app = std::make_unique<MyVectorscope>();  // Vectorscope
             break;
         case 7:
-            app = std::make_unique<MyHistogram>(0); // Histogram-RGB
-            break;
-        case 8:
-            app = std::make_unique<MyHistogram>(1); // Histogram-Luma
-            break;
-        case 9:
-            app = std::make_unique<MyHistogram>(2); // Histogram-R
-            break;
-        case 10:
-            app = std::make_unique<MyHistogram>(3); // Histogram-G
-            break;
-        case 11:
-            app = std::make_unique<MyHistogram>(4); // Histogram-B
-            break;
-        case 12:
-            app = std::make_unique<MySkinsmooth>(); // Skinsmooth
+            app = std::make_unique<MySkinsmooth>();  // Skinsmooth
             break;
         default:
             std::cerr << "[ERROR] Unrecognized app index: " << app_index << std::endl;

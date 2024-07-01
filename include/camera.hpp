@@ -21,7 +21,9 @@ enum class Camera_Movement
     FORWARD,
     BACKWARD,
     LEFT,
-    RIGHT
+    RIGHT,
+    UP,
+    DOWN
 };
 
 // 相机抽象类
@@ -79,6 +81,12 @@ public:
                     return -Front;
                 case Camera_Movement::LEFT:
                     return -Right;
+                case Camera_Movement::RIGHT:
+                    return Right;
+                case Camera_Movement::UP:
+                    return Up;
+                case Camera_Movement::DOWN:
+                    return -Up;
                 default:
                     return Right;
             }

@@ -7,7 +7,7 @@ project(${PROJECT_NAME})
 option(BUILD_DEPENDENCIES "Build external dependencies" ON)
 
 # The main executable
-file(GLOB SRC_FILES "src/*.cpp") # 获取src目录下的所有源文件
+file(GLOB SRC_FILES "src/*.cpp" "include/imgui/*.cpp") # 获取src目录下的所有源文件
 # 添加可执行文件并将所有源文件链接到该可执行文件
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
@@ -36,6 +36,7 @@ configure_file(
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/imgui
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include

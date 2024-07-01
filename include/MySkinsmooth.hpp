@@ -30,11 +30,13 @@ public:
     ~MySkinsmooth();
 
 protected:
+    std::string title = "Skinsmooth";
     void loop() override;
+    void anotherImGui() override;
     void processInput(GLFWwindow *window);
 
 private:
-    unsigned int VAO{0};
+    float intensity = 0.5f;
     std::unique_ptr<Texture> texture = std::make_unique<Texture>(RES_DIR "/picture/face5.jpg");
     std::unique_ptr<Texture> texture_aiMask = std::make_unique<Texture>(RES_DIR "/picture/face5_aiMask.jpg");
     // YCbCrSkinMask
