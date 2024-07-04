@@ -7,6 +7,7 @@
  */
 #include "Framebuffer.hpp"
 
+#include "MyGaussianblur.hpp"
 #include "MyHistogram.hpp"
 #include "MyModel.hpp"
 #include "MyPseudocolor.hpp"
@@ -21,44 +22,82 @@ const std::string APP_WARNING_INFO =
     "please select application: 1:3DModel, 2:pseudocolor, 3:Zebra, 4:Waveform 5:Histogram, 6:Skinsmooth \n  \
                                       Usage: ./opengl-cmake-cs.exe <app_index>";
 
-int main(int argc, const char* argv[]) {
-    std::unique_ptr<Application> app;
+#define ENUMNAME(n) \
+    case n:         \
+        return #n
+const char* print_enum_name(int n) {
+    switch (n) {
+        ENUMNAME(CS_NONE);
+        ENUMNAME(CS_3DMODEL);
+        ENUMNAME(CS_PSEUDOCOLOR);
+        ENUMNAME(CS_ZEBRA);
+        ENUMNAME(CS_WAVEFORM);
+        ENUMNAME(CS_HISTOGRAM);
+        ENUMNAME(CS_VECTORSCOPE);
+        ENUMNAME(CS_SKINSMOOTH);
+        ENUMNAME(CS_GAUSSIANBLUR);
+        default:
+            return "unknow enum";
+    }
+}
+
+/**
+ * Main function for running the selected application.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Exit code.
+ */
+int main(int argc, const char** argv) {
+    int selectedAppIndex = CS_NONE;
+    std::unique_ptr<Application> selectedApp;
+
     if (argc != 2) {
         std::cerr << APP_WARNING_INFO << std::endl;
-        std::unique_ptr<Application> app;
-        app = std::make_unique<MyModel>();
-        app->run();
-        return 1;
+        selectedAppIndex = CS_3DMODEL;
+    } else {
+        selectedAppIndex = static_cast<int>(std::stoi(argv[1]));
     }
 
-    int app_index = std::stoi(argv[1]);
-    switch (app_index) {
-        case 1:
-            app = std::make_unique<MyModel>();  // 3D Model
+    while (true) {
+        switch (selectedAppIndex) {
+            case CS_3DMODEL:
+                selectedApp = std::make_unique<MyModel>();
+                break;
+            case CS_PSEUDOCOLOR:
+                selectedApp = std::make_unique<MyPseudocolor>();
+                break;
+            case CS_ZEBRA:
+                selectedApp = std::make_unique<MyZebra>();
+                break;
+            case CS_WAVEFORM:
+                selectedApp = std::make_unique<MyWaveform>();
+                break;
+            case CS_HISTOGRAM:
+                selectedApp = std::make_unique<MyHistogram>();
+                break;
+            case CS_VECTORSCOPE:
+                selectedApp = std::make_unique<MyVectorscope>();
+                break;
+            case CS_SKINSMOOTH:
+                selectedApp = std::make_unique<MySkinsmooth>();
+                break;
+            case CS_GAUSSIANBLUR:
+                selectedApp = std::make_unique<MyGaussianblur>();
+                break;
+            default:
+                selectedApp = std::make_unique<MyModel>();
+                break;
+        }
+
+        selectedApp->run();
+
+        if (selectedAppIndex != static_cast<int>(selectedApp->funcIndex)) {
+            selectedAppIndex = static_cast<int>(selectedApp->funcIndex);
+            selectedApp.reset();
+        } else {
             break;
-        case 2:
-            app = std::make_unique<MyPseudocolor>();  // pseudocolor
-            break;
-        case 3:
-            app = std::make_unique<MyZebra>();  // Zebra
-            break;
-        case 4:
-            app = std::make_unique<MyWaveform>();  // Waveform
-            break;
-        case 5:
-            app = std::make_unique<MyHistogram>();  // Histogram
-            break;
-        case 6:
-            app = std::make_unique<MyVectorscope>();  // Vectorscope
-            break;
-        case 7:
-            app = std::make_unique<MySkinsmooth>();  // Skinsmooth
-            break;
-        default:
-            std::cerr << "[ERROR] Unrecognized app index: " << app_index << std::endl;
-            app = std::make_unique<MyModel>();
-            return 1;
+        }
     }
-    app->run();
+
     return 0;
 }

@@ -11,6 +11,7 @@
 #include <vector>
 
 MyPseudocolor::MyPseudocolor() {
+    funcIndex = CS_PSEUDOCOLOR;
     // setting the window size and aspect ratio
     setWindowAspectRatio(texture->getWidth(), texture->getHeight());
 }
@@ -34,45 +35,38 @@ void MyPseudocolor::anotherImGui() {
         ImGui::Text(("Hello from " + title + " window!").c_str());
         ImGui::Spacing();
 
-        // IMGUI_DEMO_MARKER("Image");
-        if (ImGui::CollapsingHeader("Image")) {
-            static ImGuiComboFlags flags = 0;
-            static int item_current_idx = 0;  // Here we store our selection data as an index
-            std::string combo_preview_value = imgPathItems[item_current_idx];
+        // Select Function
+        selectFunction();
 
-            // checkbox for using local image path
-            ImGui::SeparatorText("Select Image");
-            static bool useLocalImgPath = false;
-            ImGui::Checkbox("Use Local Image", &useLocalImgPath);
-            ImGui::SameLine();
-            HelpMarker("Input image path, or Select image from directory.");
-            if (useLocalImgPath) {
-                static char buf1[1024] = "";
-                static bool inputComplete = false;
-                ImGui::InputText(" ", buf1, IM_ARRAYSIZE(buf1));
-                ImGui::SameLine();
-                ImGui::Checkbox("input image path", &inputComplete);
-                if (inputComplete) {
-                    texture->update(buf1);  // update the texture
-                    setWindowAspectRatio(texture->getWidth(), texture->getHeight());
-                }
-            } else if (ImGui::BeginCombo("select picture", combo_preview_value.c_str(), flags)) {
-                for (int n = 0; n < (int)imgPathItems.size(); n++) {
-                    const bool is_selected = (item_current_idx == n);
-                    if (ImGui::Selectable((RES_DIR + imgPathItems[n]).c_str(), is_selected)) {
-                        item_current_idx = n;
-                        texture->update(RES_DIR + imgPathItems[item_current_idx]);  // update the texture
+        ImGui::SeparatorText("");
+        // Select Image
+        if (ImGui::CollapsingHeader("Image")) {
+            std::string selectedImagePath = imgPathItems[0];
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 10);
+            if (ImGui::BeginCombo("select picture", selectedImagePath.c_str())) {
+                for (const auto& imgPath : imgPathItems) {
+                    if (ImGui::Selectable(imgPath.c_str())) {
+                        selectedImagePath = imgPath;
+                        texture->update(RES_DIR + selectedImagePath);
                         setWindowAspectRatio(texture->getWidth(), texture->getHeight());
-                    }
-                    if (is_selected) {
-                        ImGui::SetItemDefaultFocus();
                     }
                 }
                 ImGui::EndCombo();
             }
+            ImGui::SameLine();
+            static bool useLocalImgPath = false;
+            ImGui::Checkbox("Use Local Image", &useLocalImgPath);
+            if (useLocalImgPath) {
+                static char inputBuffer[1024] = "";
+                ImGui::InputTextWithHint(" ", "Image path", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+                if (ImGui::IsItemDeactivatedAfterEdit()) {
+                    texture->update(inputBuffer);
+                    setWindowAspectRatio(texture->getWidth(), texture->getHeight());
+                }
+            }
         }
 
-        // close another MyPseudocolor window
+        // Close
         ImGui::Spacing();
         if (ImGui::Button("Close"))
             show_another_window = false;

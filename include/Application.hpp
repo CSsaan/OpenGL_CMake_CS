@@ -28,19 +28,36 @@ using namespace std;
 
 struct GLFWwindow;
 
+enum allFunctions {
+    CS_NONE = 0,
+    CS_3DMODEL = 1,
+    CS_PSEUDOCOLOR = 2,
+    CS_ZEBRA = 3,
+    CS_WAVEFORM = 4,
+    CS_HISTOGRAM = 5,
+    CS_VECTORSCOPE = 6,
+    CS_SKINSMOOTH = 7,
+    CS_GAUSSIANBLUR = 8
+};
+
 /// Application class:
 /// * init OpenGL
 /// * provide:
 ///   * getWidth()
 ///   * getHeight()
+///   * getWindowRatio()    
+///   * getScreenWidth()
+///   * getScreenHeight()
+///   * getScreenRatio()
 ///   * getFrameDeltaTime()
 ///   * getWindowRatio()
 ///   * windowDimensionChanged()
 /// * let the user define the "loop" function.
 class Application {
    public:
+   
+    allFunctions funcIndex = CS_NONE;
     Application() {
-        cout << "[Info] GLFW initialisation" << endl;
         // initialize the GLFW library
         if (!glfwInit()) {
             throw std::runtime_error("Couldn't init GLFW");
@@ -73,8 +90,10 @@ class Application {
             throw std::runtime_error(string("Could initialize GLEW, error = ") + (const char*)glewGetErrorString(err));
         }
         // get version info
+        const auto* vendor = glGetString(GL_VENDOR);
         const auto* renderer = glGetString(GL_RENDERER);
         const auto* version = glGetString(GL_VERSION);
+        cout << "Vendor: " << vendor << endl;
         cout << "Renderer: " << renderer << endl;
         cout << "OpenGL version supported " << version << endl;
         // opengl configuration
@@ -84,11 +103,11 @@ class Application {
         // glfwSwapInterval(false);
         vertices = {
             -1.0, -1.0, 0.0, 0.0, 1.0,
-            1.0, -1.0, 0.0, 1.0, 1.0,
-            1.0, 1.0, 0.0, 1.0, 0.0,
+             1.0, -1.0, 0.0, 1.0, 1.0,
+             1.0,  1.0, 0.0, 1.0, 0.0,
             -1.0, -1.0, 0.0, 0.0, 1.0,
-            1.0, 1.0, 0.0, 1.0, 0.0,
-            -1.0, 1.0, 0.0, 0.0, 0.0};
+             1.0,  1.0, 0.0, 1.0, 0.0,
+            -1.0,  1.0, 0.0, 0.0, 0.0};
         genVaoVbo();
 
         // [ImGui] Setup Dear ImGui context
@@ -274,6 +293,36 @@ class Application {
     }
     virtual void anotherImGui() {
         cout << "[INFO] : anotherImGui" << endl;
+    }
+    virtual void selectFunction() {
+        static int prev_e = funcIndex;
+        int e = prev_e;
+        ImGui::SeparatorText("Select Function");
+        ImGui::RadioButton("Close", &e, CS_NONE); ImGui::SameLine();
+        ImGui::RadioButton("3DModel", &e, CS_3DMODEL); ImGui::SameLine();
+        ImGui::RadioButton("Pseudocolor", &e, CS_PSEUDOCOLOR); ImGui::SameLine();
+        ImGui::RadioButton("Zebra", &e, CS_ZEBRA);
+        ImGui::RadioButton("Waveform", &e, CS_WAVEFORM); ImGui::SameLine();
+        ImGui::RadioButton("Histogram", &e, CS_HISTOGRAM); ImGui::SameLine();
+        ImGui::RadioButton("Vectorscope", &e, CS_VECTORSCOPE); ImGui::SameLine();
+        ImGui::RadioButton("SkinSmooth", &e, CS_SKINSMOOTH); ImGui::SameLine();
+        ImGui::RadioButton("GaussianBlur", &e, CS_GAUSSIANBLUR);
+        if (e != prev_e) {
+            glfwSetWindowShouldClose(getWindow(), true);
+            switch (e) {
+                case CS_NONE: glfwSetWindowShouldClose(getWindow(), true); break;
+                case CS_3DMODEL: funcIndex = CS_3DMODEL; break;
+                case CS_PSEUDOCOLOR: funcIndex = CS_PSEUDOCOLOR; break;
+                case CS_ZEBRA: funcIndex = CS_ZEBRA; break;
+                case CS_WAVEFORM: funcIndex = CS_WAVEFORM; break;
+                case CS_HISTOGRAM: funcIndex = CS_HISTOGRAM; break;
+                case CS_VECTORSCOPE: funcIndex = CS_VECTORSCOPE; break;
+                case CS_SKINSMOOTH: funcIndex = CS_SKINSMOOTH; break;
+                case CS_GAUSSIANBLUR: funcIndex = CS_GAUSSIANBLUR; break;
+                default: funcIndex = CS_3DMODEL; break;
+            }
+            prev_e = e;
+        }
     }
     void setWindowAspectRatio(int texWidth, int texHeight) {
         float textureAspectRatio = static_cast<float>(texHeight / texWidth);

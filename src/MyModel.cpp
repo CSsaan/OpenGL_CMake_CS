@@ -22,14 +22,15 @@ float lastFrame = 0.0f;
 }  // namespace
 
 MyModel::MyModel() {
+    funcIndex = CS_3DMODEL;
     dirLight.direction = glm::vec3(-1.2f, -1.0f, -2.0f);
-    dirLight.ambient = 0.2f;
-    dirLight.diffuse = 0.5f;
+    dirLight.ambient = 0.7f;
+    dirLight.diffuse = 0.7f;
     dirLight.specular = 1.0f;
 
     pointLight.position = glm::vec3(0.7f, 0.2f, 2.0f);
-    pointLight.ambient = 0.2f;
-    pointLight.diffuse = 0.5f;
+    pointLight.ambient = 0.7f;
+    pointLight.diffuse = 0.7f;
     pointLight.specular = 1.0f;
     pointLight.constant = 1.0f;
     pointLight.linear = 0.35f;
@@ -52,11 +53,14 @@ void MyModel::anotherImGui() {
         ImGui::Text(("Hello from " + title + " window!").c_str());
         ImGui::Spacing();
 
+        // Select Function
+        selectFunction();
+
         ImGui::SeparatorText("Options");
 
         ImGui::Spacing();
         if (ImGui::CollapsingHeader("Direction Light")) {
-            ImGui::ColorEdit3("light color", (float*)&dirLightColor);  // Edit 3 floats representing a color
+            ImGui::ColorEdit3("light color", (float*)&dirLightColor);
             ImGui::SliderFloat3("direction", (float*)&dirLight.direction, -2.0f, 2.0f);
             ImGui::SliderFloat("ambient", &dirLight.ambient, 0.0f, 1.0f);
             ImGui::SliderFloat("diffuse", &dirLight.diffuse, 0.0f, 1.0f);
@@ -65,8 +69,8 @@ void MyModel::anotherImGui() {
 
         ImGui::Spacing();
         if (ImGui::CollapsingHeader("Point Light")) {
-            ImGui::ColorEdit3("light color", (float*)&pointLightColor);  // Edit 3 floats representing a color
-            ImGui::SliderFloat("position", (float*)&pointLight.position, -20.0f, 20.0f);
+            ImGui::ColorEdit3("light color", (float*)&pointLightColor);
+            ImGui::SliderFloat3("position", (float*)&pointLight.position, -20.0f, 20.0f);
             ImGui::SliderFloat("specular", (float*)&pointLight.specular, 0.0f, 1.0f);
             static int Attenuation = 0;
             std::vector<std::vector<float>> AttenuationList = {{0.7, 1.8}, {0.35, 0.44}, {0.22, 0.20}, {0.14, 0.07}, {0.09, 0.032}, {0.07, 0.017}, {0.045, 0.0075}, {0.027, 0.0028}, {0.022, 0.0019}, {0.014, 0.0007}, {0.007, 0.0002}, {0.0014, 0.000007}};
@@ -75,6 +79,23 @@ void MyModel::anotherImGui() {
             pointLight.quadratic = AttenuationList[Attenuation][1];
             ImGui::Text("linear: %f, quadratic: %f", pointLight.linear, pointLight.quadratic);
         }
+
+        ImGui::Spacing();
+        ImGui::SliderFloat("scale", &scale, 0.0f, 5.0f);
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Translate");
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
+        ImGui::SliderFloat("x", (float*)&translate[0], -10.0f, 10.0f);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
+        ImGui::SliderFloat("y", (float*)&translate[1], -10.0f, 10.0f);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
+        ImGui::SliderFloat("z", (float*)&translate[2], -10.0f, 10.0f);
+
+        ImGui::Spacing();
+        ImGui::SliderFloat3("rotate", (float*)&rotateAngle, 0.0f, 360.0f);
 
         if (ImGui::Button("Save")) {
             if (show_another_window) {
@@ -118,10 +139,21 @@ void MyModel::loop() {
 
 void MyModel::render() {
     shaderProgram->use();
+    int w, h;
+    float rx = 1.0f;
+    float ry = 1.0f;
+    glfwGetWindowSize(getWindow(), &w, &h);
+    if (w <= h) {
+        rx = static_cast<float>(h) / static_cast<float>(w);
+    } else {
+        ry = static_cast<float>(w) / static_cast<float>(h);
+    }
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
-    model = glm::scale(model, glm::vec3(1.0f));
+    model = glm::translate(model, translate);
+    model = glm::rotate(model, glm::radians(rotateAngle[0]), glm::vec3(0.0, 1.0, 0.0));
+    model = glm::rotate(model, glm::radians(rotateAngle[1]), glm::vec3(1.0, 0.0, 0.0));
+    model = glm::rotate(model, glm::radians(rotateAngle[2]), glm::vec3(0.0, 0.0, 1.0));
+    model = glm::scale(model, glm::vec3(1.0f * scale * rx, 1.0f * scale * ry, 1.0f * scale));
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 1000.0f);
     shaderProgram->setUniformMat4("model", model);
     shaderProgram->setUniformMat4("view", camera.GetViewMatrix());
@@ -169,11 +201,6 @@ void MyModel::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) n
 
 void MyModel::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
-}
-
-void MyModel::mymouse_callback_null(GLFWwindow* window, double xposIn, double yposIn) noexcept {
-}
-void MyModel::myscroll_callback_null(GLFWwindow* window, double xoffset, double yoffset) noexcept {
 }
 
 void MyModel::processInput(GLFWwindow* window) {

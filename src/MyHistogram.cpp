@@ -12,6 +12,7 @@
 #include <vector>
 
 MyHistogram::MyHistogram() {
+    funcIndex = CS_HISTOGRAM;
     // // setting the window size and aspect ratio
     // setWindowAspectRatio(img_width, img_height);
 
@@ -86,6 +87,9 @@ void MyHistogram::anotherImGui() {
         ImGui::Begin("Another Window", &show_another_window);  // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text(("Hello from " + title + " window!").c_str());
         ImGui::Spacing();
+
+        // Select Function
+        selectFunction();
 
         ImGui::SeparatorText("Select Mode");
         static int e = 0;

@@ -11,6 +11,7 @@
 #include <vector>
 
 MySkinsmooth::MySkinsmooth() {
+    funcIndex = CS_SKINSMOOTH;
     // setting the window size and aspect ratio
     setWindowAspectRatio(texture->getWidth(), texture->getHeight());
 
@@ -39,6 +40,9 @@ void MySkinsmooth::anotherImGui() {
         ImGui::Begin("Another Window", &show_another_window);  // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text(("Hello from " + title + " window!").c_str());
         ImGui::Spacing();
+
+        // Select Function
+        selectFunction();
 
         // checkbox for using local image path
         ImGui::SeparatorText("smooth Intensity");
