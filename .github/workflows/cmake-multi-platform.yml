@@ -52,8 +52,8 @@ jobs:
       id: strings
       shell: bash
       run: |
-        git pull --recurse-submodules
-        git submodule update --remote --recursive
+        git submodule init
+        git submodule update
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
