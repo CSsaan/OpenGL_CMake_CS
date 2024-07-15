@@ -1,11 +1,12 @@
 OpenGL CMake CS
 =======================
 
-This is a C++14 CMake project for OpenGL applications by CS. It includes the following libraries: **GLFW**, **Glew**, **glm**, and **assimp**. The project is designed to be cross-platform and can be compiled on  ***Linux***, ***Windows***, and ***Mac***.
+This is a C++14 CMake project for OpenGL applications by CS. It includes the following libraries: **GLFW**, **Glew**, **glm**, and **assimp**. It also uses **ImGui** for GUI. The project is designed to be cross-platform and can be compiled on  ***Linux***, ***Windows***, and ***Mac***.
 
 Features:
 - Ready-to-use C++14 CMake project for OpenGL applications
 - Uses **GLFW**, **Glew**, **glm**, and **assimp** libraries
+- Uses ImGui for GUI
 - Supports Linux, Windows, and Mac
 - Includes a Shader class and an example Application
 
@@ -24,10 +25,32 @@ Requirements:
     <img src="res/readme_img/3Dmodel.gif" width="300" />
     <img src="res/readme_img/Pseudocolor.png" width="300" />
     <img src="res/readme_img/Zebra.gif" width="300" />
-    <img src="res/readme_img/Waveform.jpg" width="300" />
 </div>
 
 <div style="display:flex;">
+    <img src="res/readme_img/Waveform.png" width="300" />
+    <img src="res/readme_img/Waveform_RGB.png" width="300" />
+    <img src="res/readme_img/Waveform_RGBsplit.png" width="300" />
+</div>
+
+<div style="display:flex;">
+    <img src="res/readme_img/Histogram.png" width="300" />
+    <img src="res/readme_img/Histogram_R.png" width="300" />
+    <img src="res/readme_img/Histogram_G.png" width="300" />
+</div>
+
+<div style="display:flex;">
+    <img src="res/readme_img/Histogram_B.png" width="300" />
+    <img src="res/readme_img/Histogram_Luma.png" width="300" />
+</div>
+
+<div style="display:flex;">
+    <img src="res/readme_img/Vectorscope_Luma.png" width="300" />
+    <img src="res/readme_img/Vectorscope_RGB.png" width="300" />
+</div>
+
+<div style="display:flex;">
+    <img src="res/readme_img/Gaussianblur.png" width="300" />
     <img src="res/readme_img/Skinsmoothing.gif" width="300" />
 </div>
 

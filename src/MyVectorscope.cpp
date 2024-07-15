@@ -211,7 +211,7 @@ void MyVectorscope::anotherImGui() {
 
         // Close
         ImGui::Spacing();
-        if (ImGui::Button("Close"))
+        if (ImGui::Button("Close window"))
             show_another_window = false;
 
         ImGui::End();

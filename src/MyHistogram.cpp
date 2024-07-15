@@ -160,7 +160,7 @@ void MyHistogram::anotherImGui() {
 
         // close another MyPseudocolor window
         ImGui::Spacing();
-        if (ImGui::Button("Close"))
+        if (ImGui::Button("Close window"))
             show_another_window = false;
 
         ImGui::End();
