@@ -30,7 +30,6 @@ void MySkinsmooth::loop() {
     }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0, 0.0f, 0.0f, 1.0f);
-
     render();
 }
 
@@ -44,11 +43,61 @@ void MySkinsmooth::anotherImGui() {
         // Select Function
         selectFunction();
 
+        ImGui::SeparatorText("");
+            // Select Image
+            if (ImGui::CollapsingHeader("Image")) {
+                std::string selectedImagePath = imgPathItems[0].first;
+                std::string selectedMaskPath = imgPathItems[0].second;
+                ImGui::SetNextItemWidth(ImGui::GetFontSize() * 10);
+                if (ImGui::BeginCombo("select picture", selectedImagePath.c_str())) {
+                    for (const auto& imgPath : imgPathItems) {
+                        if (ImGui::Selectable(imgPath.first.c_str())) {
+                            selectedImagePath = imgPath.first;
+                            selectedMaskPath = imgPath.second;
+                            texture->update(RES_DIR + selectedImagePath);
+                            texture_aiMask->update(RES_DIR + selectedMaskPath);
+                            setWindowAspectRatio(texture->getWidth(), texture->getHeight());
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::SameLine();
+                static bool useLocalImgPath = false;
+                ImGui::Checkbox("Use Local Image", &useLocalImgPath);
+                if (useLocalImgPath) {
+                    static char inputBuffer[1024] = "";
+                    ImGui::InputTextWithHint(" ", "Image path", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+                    if (ImGui::IsItemDeactivatedAfterEdit()) {
+                        texture->update(inputBuffer);
+                        texture_aiMask->update("/picture/white_aiMask.png");
+                        setWindowAspectRatio(texture->getWidth(), texture->getHeight());
+                    }
+                }
+            }
+
         // checkbox for using local image path
         ImGui::SeparatorText("smooth Intensity");
         ImGui::SliderFloat("Intensity", &intensity, 0.0f, 1.0f);
         ImGui::SameLine();
-        HelpMarker("Smooth intensity.\n It use to control the smoothness of the skin mask.\n Default: 0.5.");
+        HelpMarker("Smooth intensity.\n It use to control the smoothness of the skin mask.\n Default: 0.9.");
+
+        ImGui::SliderFloat("offset", &offset, 0.0f, 2.5f);
+        ImGui::SameLine();
+        HelpMarker("Blur radius.\n It use to control the step of the blur.\n Default: 2.0.");
+
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 5);
+        ImGui::SliderFloat("blurCoefficient", &blurCoefficient, 0.0f, 1.0f);
+        ImGui::SameLine();
+        HelpMarker("Blur Alpha.\n Default: 0.65.");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * 5);
+        ImGui::SliderFloat("sharpenStrength", &sharpenStrength, 0.0f, 1.0f);
+        ImGui::SameLine();
+        HelpMarker("sharpenStrength.\n Default: 0.41.");
+
+        ImGui::SeparatorText("smooth method");
+        ImGui::RadioButton("method1", &method, 0); ImGui::SameLine();
+        ImGui::RadioButton("method2", &method, 1);
 
         // close another MyPseudocolor window
         ImGui::Spacing();
@@ -60,7 +109,7 @@ void MySkinsmooth::anotherImGui() {
 }
 
 void MySkinsmooth::render() {
-    glViewport(0, 0, WINDOW_WIDTH / DOWN_SAMPLE_RATIO, WINDOW_HEIGHT / DOWN_SAMPLE_RATIO);
+    glViewport(0, 0, static_cast<int>(WINDOW_WIDTH / DOWN_SAMPLE_RATIO), static_cast<int>(WINDOW_HEIGHT / DOWN_SAMPLE_RATIO));
     // YCbCrSkinMask
     fbo_YCbCrSkinMask->bind();
     shaderProgram_YCbCrSkinMask->use();
@@ -144,12 +193,12 @@ void MySkinsmooth::render() {
     fbo_gaussian->unbind();
 
     // downSample1
-    glViewport(0, 0, WINDOW_WIDTH / DOWN_SAMPLE_RATIO, WINDOW_HEIGHT / DOWN_SAMPLE_RATIO);
+    glViewport(0, 0, static_cast<int>(WINDOW_WIDTH / DOWN_SAMPLE_RATIO), static_cast<int>(WINDOW_HEIGHT / DOWN_SAMPLE_RATIO));
     fbo_downSample1->bind();
     shaderProgram_downSample->use();
     glBindVertexArray(VAO);
     shaderProgram_downSample->setUniformMat4("model", glm::mat4(1.0f));
-    shaderProgram_downSample->setUniform2f("offset", glm::vec2(2.0f, 2.0f));
+    shaderProgram_downSample->setUniform2f("offset", glm::vec2(offset));
     shaderProgram_downSample->setUniform2f("halfpixel", glm::vec2(0.5f * 2 / WINDOW_WIDTH, 0.5f * 2 / WINDOW_HEIGHT));
     glCheckError(__FILE__, __LINE__);
     texture->bind(0);
@@ -159,12 +208,12 @@ void MySkinsmooth::render() {
     fbo_downSample1->unbind();
 
     // downSample2
-    glViewport(0, 0, WINDOW_WIDTH / (DOWN_SAMPLE_RATIO * 2), WINDOW_HEIGHT / (DOWN_SAMPLE_RATIO * 2));
+    glViewport(0, 0, static_cast<int>(WINDOW_WIDTH / (DOWN_SAMPLE_RATIO * 2)), static_cast<int>(WINDOW_HEIGHT / (DOWN_SAMPLE_RATIO * 2)));
     fbo_downSample2->bind();
     shaderProgram_downSample->use();
     glBindVertexArray(VAO);
     shaderProgram_downSample->setUniformMat4("model", glm::mat4(1.0f));
-    shaderProgram_downSample->setUniform2f("offset", glm::vec2(2.0f, 2.0f));
+    shaderProgram_downSample->setUniform2f("offset", glm::vec2(offset));
     shaderProgram_downSample->setUniform2f("halfpixel", glm::vec2(0.5f * 4 / WINDOW_WIDTH, 0.5f * 4 / WINDOW_HEIGHT));
     glCheckError(__FILE__, __LINE__);
     fbo_downSample1->bindTexture(0);
@@ -174,12 +223,12 @@ void MySkinsmooth::render() {
     fbo_downSample2->unbind();
 
     // upSample1
-    glViewport(0, 0, WINDOW_WIDTH / DOWN_SAMPLE_RATIO, WINDOW_HEIGHT / DOWN_SAMPLE_RATIO);
+    glViewport(0, 0, static_cast<int>(WINDOW_WIDTH / DOWN_SAMPLE_RATIO), static_cast<int>(WINDOW_HEIGHT / DOWN_SAMPLE_RATIO));
     fbo_upSample1->bind();
     shaderProgram_upSample->use();
     glBindVertexArray(VAO);
     shaderProgram_upSample->setUniformMat4("model", glm::mat4(1.0f));
-    shaderProgram_upSample->setUniform2f("offset", glm::vec2(2.0f, 2.0f));
+    shaderProgram_upSample->setUniform2f("offset", glm::vec2(offset));
     shaderProgram_upSample->setUniform2f("halfpixel", glm::vec2(0.5f * 2 / WINDOW_WIDTH, 0.5f * 2 / WINDOW_HEIGHT));
     glCheckError(__FILE__, __LINE__);
     fbo_downSample2->bindTexture(0);
@@ -194,7 +243,7 @@ void MySkinsmooth::render() {
     shaderProgram_upSample->use();
     glBindVertexArray(VAO);
     shaderProgram_upSample->setUniformMat4("model", glm::mat4(1.0f));
-    shaderProgram_upSample->setUniform2f("offset", glm::vec2(2.0f, 2.0f));
+    shaderProgram_upSample->setUniform2f("offset", glm::vec2(offset));
     shaderProgram_upSample->setUniform2f("halfpixel", glm::vec2(0.5f / WINDOW_WIDTH, 0.5f / WINDOW_HEIGHT));
     glCheckError(__FILE__, __LINE__);
     fbo_upSample1->bindTexture(0);
@@ -208,8 +257,12 @@ void MySkinsmooth::render() {
     fbo_smooth->bind();
     shaderProgram_smooth->use();
     glBindVertexArray(VAO);
+    shaderProgram_smooth->setUniform1i("method", method);
     shaderProgram_smooth->setUniformMat4("model", glm::mat4(1.0f));
     shaderProgram_smooth->setUniform1f("intensity", intensity);
+    shaderProgram_smooth->setUniform1f("blurCoefficient", blurCoefficient);
+    shaderProgram_smooth->setUniform1f("sharpenStrength", sharpenStrength);
+    shaderProgram_smooth->setUniform2f("windowSize", glm::vec2(WINDOW_WIDTH, WINDOW_HEIGHT));
     texture->bind(0);
     glCheckError(__FILE__, __LINE__);
     fbo_upSample2->bindTexture(1);

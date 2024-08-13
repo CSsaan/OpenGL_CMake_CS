@@ -36,9 +36,18 @@ protected:
     void processInput(GLFWwindow *window);
 
 private:
-    float intensity = 0.5f;
-    std::unique_ptr<Texture> texture = std::make_unique<Texture>(RES_DIR "/picture/face5.jpg");
-    std::unique_ptr<Texture> texture_aiMask = std::make_unique<Texture>(RES_DIR "/picture/face5_aiMask.jpg");
+    int method = 1;
+    float intensity = 0.9f;
+    float offset = 2.0f;
+    float blurCoefficient = 0.65f;
+    float sharpenStrength = 0.41f;
+    const std::vector<std::pair<std::string, std::string>> imgPathItems = { 
+        {"/picture/freckle.jpg", "/picture/freckle_aiMask.jpg"}, 
+        {"/picture/freckle1.jpg", "/picture/freckle1_aiMask.jpg"}, 
+        {"/picture/freckle2.jpg", "/picture/freckle2_aiMask.jpg"}, 
+        {"/picture/face.jpg", "/picture/face_aiMask.jpg"} };
+    std::unique_ptr<Texture> texture = std::make_unique<Texture>(RES_DIR + imgPathItems[0].first);
+    std::unique_ptr<Texture> texture_aiMask = std::make_unique<Texture>(RES_DIR + imgPathItems[0].second);
     // YCbCrSkinMask
     std::unique_ptr<Fbo> fbo_YCbCrSkinMask = std::make_unique<Fbo>(WINDOW_WIDTH/DOWN_SAMPLE_RATIO, WINDOW_HEIGHT/DOWN_SAMPLE_RATIO);
     std::unique_ptr<Shader> shaderProgram_YCbCrSkinMask = std::make_unique<Shader>(SHADER_DIR "/Skinsmoothing/YCbCrSkinMask.vert", SHADER_DIR "/Skinsmoothing/YCbCrSkinMask.frag");

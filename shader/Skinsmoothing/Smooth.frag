@@ -1,3 +1,28 @@
+/*
+通道磨皮：method=0
+    是指从原图的RGB三通道中，选取一个特征明显的通道，作为痘印的选区通道（这个通道一般是G通道或者B通道，
+    在PS中根据具体用户图来选择），根据选取通道确定痘印区域，然后对该区域对应的原图进行提亮处理，进而将
+    痘印颜色减淡至消失。
+通道选择：
+    对于痘痘区域，痘痘斑点一般多为深色区域，因此，相对而言G和B通道对比要更加明显。
+步骤：
+    1，选择原图的G、B通道，构建灰度图Gray；
+    2，对灰度图Gray做高反差保留，得到G_HP；
+    3，对G_HP和G_HP自身做“叠加”图层混合，执行3-5次，最后一次执行“线性光”图层混合，得到痘痘区域图层alpha；
+    4，对痘印区域图进行曲线调节-提亮处理，亮度调节到痘印消失即可；
+    5，最后，根据AI皮肤检测的mask，只处理的皮肤部分。
+*/
+
+/*
+新磨皮：method=1
+步骤：
+    1，选择原图、均值模糊图，做差方得到高频图；
+    2，选择原图的通道、均值模糊的R通道，在模糊图基础上,保留黑色毛发边缘；
+    3，融合高频图与第2步结果，得到磨皮强度alpha图；
+    4，根据alpha强度图，来融合原图、均值模糊图，得到磨皮结果图；
+    5，最后，最第4步磨皮结果做锐化处理，突出边缘细节。
+*/
+
 #version 430
 precision highp float;
 in vec2 o_texcoord;
@@ -8,6 +33,10 @@ layout(binding = 2) uniform sampler2D s_textureMask;
 // layout(binding = 3) uniform sampler2D s_texLutSpline1D;
 
 uniform float intensity;
+uniform vec2 windowSize;
+uniform float blurCoefficient;
+uniform float sharpenStrength;
+uniform int method;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -31,31 +60,82 @@ vec4 face_lighten(vec4 color)
     return vec4(vec3(red, gre, blu)/255.0, 1.0);
 }
 
+float computeBlendRatio(float inColor, float blurColor) {
+    float minColor = min(inColor, blurColor - 0.1);
+    float adjustedColor = minColor - 0.2;
+    return clamp(adjustedColor * 4.0, 0.0, 1.0);
+}
+
+vec3 calculateSharpen(vec3 inColor, float flag) {
+	vec3 lowerBound = max(vec3(0.0), inColor);
+	vec3 upperBound = min(vec3(1.0), inColor);
+	return mix(lowerBound, upperBound, flag);
+}
+
 void main()
 {
     float faceMASK = texture(s_textureMask, o_texcoord).r;
-    vec4 currentColor = texture(s_texture, o_texcoord);
-    vec4 currentBlur = texture(s_textureBlur, o_texcoord);
-    float currC = pre_handle_of_chl(currentColor.rgb);
-    float blurC = pre_handle_of_chl(currentBlur.rgb);
-    
-    float hightPassColor = currC - blurC + 0.5;
-    for (int i = 0; i < 3; i++) {
-        if (hightPassColor < 0.5) {
-            hightPassColor = hightPassColor * hightPassColor * 2.0;
+    vec4 inColor = texture(s_texture, o_texcoord);
+    lowp vec4 blurColor = texture(s_textureBlur, o_texcoord);
+
+    vec3 res;
+    if(method == 0) 
+    {
+       float currC = pre_handle_of_chl(inColor.rgb);
+        float blurC = pre_handle_of_chl(blurColor.rgb);
+        
+        float hightPassColor = currC - blurC + 0.5;
+        for (int i = 0; i < 3; i++) {
+            if (hightPassColor < 0.5) {
+                hightPassColor = hightPassColor * hightPassColor * 2.0;
+            }
+            else {
+                hightPassColor = 1.0 - (1.0-hightPassColor) * (1.0-hightPassColor) * 2.0;
+            }
         }
-        else {
-            hightPassColor = 1.0 - (1.0-hightPassColor) * (1.0-hightPassColor) * 2.0;
-        }
+        float alpha = 1.0 - hightPassColor;
+        // alpha = clamp(4.0*pow(alpha-0.2, 2.0), 0.0, 0.5) *smoothstep(0.0, 1.0, smoothstep(0.0, 1.0, alpha-0.2)); // 抑制背景提亮
+        
+        alpha = clamp(alpha, 0.0, 1.0);
+        // lighten 
+        vec4 lightenColor = face_lighten(inColor);
+        lightenColor = mix(inColor, lightenColor, alpha);
+        // merge with alpha
+        res = mix(inColor.rgb, lightenColor.rgb, faceMASK * abs(sin(intensity))); 
     }
-    float alpha = hightPassColor;
-    
-    alpha = clamp(alpha, 0.0, 1.0);
-    // lighten 
-    vec4 lightenColor = face_lighten(currentColor);
-    lightenColor = mix(lightenColor, currentColor, alpha);
-    // merge with alpha
-    vec3 res  = mix(currentColor.rgb, lightenColor.rgb, faceMASK * abs(sin(intensity)));
-    
-    fragColor  = vec4(res, 1.0);
+    else if(method == 1)
+    {
+        // varianceColor
+        highp vec3 squaredDiff = (inColor.rgb - blurColor.rgb) * 7.07;
+        squaredDiff = min(squaredDiff * squaredDiff, 1.0);
+        lowp vec4 varianceColor = vec4(squaredDiff, 1.0);
+        varianceColor = (inColor - blurColor) * (inColor - blurColor); // 高频图
+
+        const float threshold = 0.1;
+        mediump float blendRatio = computeBlendRatio(inColor.r, blurColor.r); // R通道. 在模糊图基础上,保留黑色毛发边缘
+        mediump float meanVariance = dot(varianceColor.rgb, vec3(0.33333));
+        mediump float minCoefficient = (1.0 - meanVariance / (meanVariance + threshold)) * blendRatio * blurCoefficient; // 磨皮强度
+        lowp vec3 finalColor = mix(inColor.rgb, blurColor.rgb, minCoefficient); 
+
+        // finalColor's sharpen
+        mediump float sum_gaussian = 0.25 * inColor.g;
+        vec2 texOffset = vec2(0.5 / windowSize.x, 0.5 / windowSize.y);
+        sum_gaussian += 0.125 *texture(s_texture, o_texcoord - vec2(texOffset.x, 0.0)).g;
+        sum_gaussian += 0.125 *texture(s_texture, o_texcoord + vec2(texOffset.x, 0.0)).g;
+        sum_gaussian += 0.125 *texture(s_texture, o_texcoord - vec2(0.0, texOffset.y)).g;
+        sum_gaussian += 0.125 *texture(s_texture, o_texcoord + vec2(0.0, texOffset.y)).g;
+        sum_gaussian += 0.0625*texture(s_texture, o_texcoord + vec2(texOffset.x, texOffset.y)).g;
+        sum_gaussian += 0.0625*texture(s_texture, o_texcoord - vec2(texOffset.x, texOffset.y)).g;
+        sum_gaussian += 0.0625*texture(s_texture, o_texcoord + vec2(-texOffset.x, texOffset.y)).g;
+        sum_gaussian += 0.0625*texture(s_texture, o_texcoord + vec2(texOffset.x, -texOffset.y)).g;
+
+        float highPassValue = inColor.g - sum_gaussian + 0.5;
+        float thresholdFlag = step(0.5, highPassValue);
+        vec3 sharpenColor = calculateSharpen((2.0 * highPassValue + finalColor - 1.0), thresholdFlag);
+        vec3 result = mix(finalColor.rgb, sharpenColor.rgb, sharpenStrength);
+
+        res = mix(inColor.rgb, result, faceMASK * intensity);
+    }
+
+    fragColor  = vec4(vec3(res).rgb, inColor.a);
 }
